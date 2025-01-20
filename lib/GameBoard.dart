@@ -23,6 +23,17 @@ class GameBoard {
             ));
   }
 
+  void refreshSelectedTiles() {
+    for (var tile in tiles) {
+      for (var ti in tile) {
+        if (ti.isSelected) {
+          ti.color = ColorTile.generateRandomTile().color; // Đổi màu ngẫu nhiên
+          ti.isSelected = false; // Bỏ chọn sau khi làm mới
+        }
+      }
+    }
+  }
+
   // Hàm lấy ô tại vị trí cụ thể
   ColorTile getTile(int row, int column) {
     return tiles[row][column];
