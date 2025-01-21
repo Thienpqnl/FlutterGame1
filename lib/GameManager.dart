@@ -1,26 +1,47 @@
-import 'package:quocthien_app_pr/ColorTile.dart';
-import 'package:quocthien_app_pr/TargetSequence.dart';
-import 'package:quocthien_app_pr/GameBoard.dart';
+import 'package:flutter/material.dart';
 import 'Player.dart';
+import 'GameBoard.dart';
+import 'TargetSequence.dart';
+import 'ColorTile.dart';
 
 class GameManager {
   final Player player;
-  final TargetSequence targetSequence;
   final GameBoard gameBoard;
+  final TargetSequence targetSequence;
+  List<ColorTile> tappedTiles = [];
 
-  GameManager(this.player, this.targetSequence, this.gameBoard);
+  GameManager(
+      {required this.player,
+      required this.gameBoard,
+      required this.targetSequence});
 
-  // Xử lý logic khi người chơi nhấn vào ô
+  // Xử lý khi người chơi nhấn vào một ô
   void handleTileTap(ColorTile tappedTile) {
-    // Kiểm tra nếu ô được nhấn trùng với ô mục tiêu đầu tiên
-    if (tappedTile.color == targetSequence.tiles[0][0].color) {
-      // Người chơi nhấn đúng
-      player.increaseScore(100); // Cộng điểm
-      targetSequence.refreshSequence(); // Làm mới dãy mục tiêu
-      gameBoard.refreshSelectedTiles(); // Làm mới bảng
+    // Kiểm tra ô đã được chọn
+    if (targetSequence.currentTarget.isEmpty) return;
+
+    final expectedTile = targetSequence.currentTarget[tappedTiles.length];
+
+    if (tappedTile == expectedTile) {
+      tappedTiles.add(tappedTile);
+
+      // Kiểm tra nếu đã nhấn đúng toàn bộ danh sách
+      if (tappedTiles.length == targetSequence.currentTarget.length) {
+        player.increaseScore(100); // Cộng điểm
+
+        // Đổi mới các ô đã nhấn trong gameBoard
+        gameBoard.refreshSelectedTiles();
+
+        // Làm mới danh sách mục tiêu
+        targetSequence.refreshSequence();
+
+        // Reset danh sách ô đã nhấn
+        tappedTiles.clear();
+      }
     } else {
-      // Người chơi nhấn sai
-      targetSequence.refreshSequence(); // Làm mới dãy mục tiêu
+      // Nếu nhấn sai, làm mới mục tiêu và reset danh sách
+      targetSequence.refreshSequence();
+      tappedTiles.clear();
     }
   }
 }

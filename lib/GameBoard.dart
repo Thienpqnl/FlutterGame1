@@ -23,6 +23,7 @@ class GameBoard {
             ));
   }
 
+// hàm làm mới các ô đã được chọn(selected)
   void refreshSelectedTiles() {
     for (var tile in tiles) {
       for (var ti in tile) {
