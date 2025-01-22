@@ -4,6 +4,7 @@ import 'ColorTile.dart';
 import 'GameBoard.dart';
 import 'Player.dart';
 import 'TargetSequence.dart';
+import 'GameManager.dart';
 
 void main() {
   runApp(const MyApp());
@@ -30,21 +31,24 @@ class GameScreen extends StatefulWidget {
 }
 
 class _GameScreenState extends State<GameScreen> {
-  final GameBoard _gameBoard = GameBoard(rows: 4, columns: 4); // Bảng các ô
-  final Player _player = Player(); // Người chơi
-  final TargetSequence _targetSequence = TargetSequence(); // Chuỗi mục tiêu
-  int timeRemaining = 60; // Thời gian chơi
+  late final GameManager _gameManager;
   late Timer timer;
+  int timeRemaining = 60;
 
   @override
   void initState() {
     super.initState();
-    startTimer(); // Bắt đầu đếm ngược thời gian
+    _gameManager = GameManager(
+      player: Player(),
+      gameBoard: GameBoard(rows: 4, columns: 4),
+      targetSequence: TargetSequence(),
+    );
+    startTimer();
   }
 
   @override
   void dispose() {
-    timer.cancel(); // Hủy bộ đếm thời gian khi thoát
+    timer.cancel();
     super.dispose();
   }
 
@@ -67,7 +71,7 @@ class _GameScreenState extends State<GameScreen> {
       builder: (context) {
         return AlertDialog(
           title: const Text('Game Over'),
-          content: Text('Your score: ${_player.score}'),
+          content: Text('Your score: ${_gameManager.player.score}'),
           actions: [
             TextButton(
               onPressed: () {
@@ -84,30 +88,19 @@ class _GameScreenState extends State<GameScreen> {
 
   void restartGame() {
     setState(() {
-      _player.score = 0;
       timeRemaining = 60;
-      _gameBoard.refreshBoard();
-      _targetSequence.refreshSequence();
+      _gameManager.player.score = 0;
+      _gameManager.gameBoard.refreshBoard();
+      _gameManager.targetSequence.refreshSequence();
+      _gameManager.tappedTiles.clear();
       startTimer();
     });
   }
 
   void onTilePressed(ColorTile tile) {
-    if (_targetSequence.tiles[0].isNotEmpty &&
-        tile.color == _targetSequence.tiles[0][0].color) {
-      setState(() {
-        _targetSequence.tiles[0].removeAt(0); // Xóa ô đã nhấn đúng khỏi chuỗi
-        _player.score += 100; // Cộng điểm
-        if (_targetSequence.tiles[0].isEmpty) {
-          _targetSequence.refreshSequence(); // Làm mới chuỗi khi hoàn thành
-        }
-      });
-    } else {
-      // Nhấn sai
-      setState(() {
-        _targetSequence.refreshSequence(); // Làm mới chuỗi
-      });
-    }
+    setState(() {
+      _gameManager.handleTileTap(tile);
+    });
   }
 
   @override
@@ -126,7 +119,7 @@ class _GameScreenState extends State<GameScreen> {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: _targetSequence.tiles[0]
+            children: _gameManager.targetSequence.currentTarget
                 .map(
                   (tile) => Container(
                     margin: const EdgeInsets.all(4),
@@ -145,19 +138,16 @@ class _GameScreenState extends State<GameScreen> {
           Expanded(
             child: GridView.builder(
               gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                crossAxisCount: 4, // 4 ô trên mỗi hàng
+                crossAxisCount: 4,
                 mainAxisSpacing: 4,
                 crossAxisSpacing: 4,
               ),
-              itemCount: _gameBoard.tiles.length *
-                  _gameBoard.tiles[0].length, // Tổng số ô
+              itemCount: _gameManager.gameBoard.tiles.length *
+                  _gameManager.gameBoard.tiles[0].length,
               itemBuilder: (context, index) {
-                // Chuyển đổi chỉ số 1D sang 2D
-                final row =
-                    index ~/ _gameBoard.tiles[0].length; // Xác định hàng
-                final col = index % _gameBoard.tiles[0].length; // Xác định cột
-                final tile =
-                    _gameBoard.tiles[row][col]; // Truy cập ô ColorTile cụ thể
+                final row = index ~/ _gameManager.gameBoard.tiles[0].length;
+                final col = index % _gameManager.gameBoard.tiles[0].length;
+                final tile = _gameManager.gameBoard.tiles[row][col];
 
                 return GestureDetector(
                   onTap: () => onTilePressed(tile),
@@ -176,7 +166,7 @@ class _GameScreenState extends State<GameScreen> {
           ),
           const SizedBox(height: 16),
           Text(
-            'Score: ${_player.score}',
+            'Score: ${_gameManager.player.score}',
             style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           ),
         ],

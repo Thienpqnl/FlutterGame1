@@ -15,32 +15,38 @@ class GameManager {
       required this.gameBoard,
       required this.targetSequence});
 
-  // Xử lý khi người chơi nhấn vào một ô
   void handleTileTap(ColorTile tappedTile) {
-    // Kiểm tra ô đã được chọn
+    // Kiểm tra nếu không có mục tiêu
     if (targetSequence.currentTarget.isEmpty) return;
 
+    // Xác định tile mong đợi
     final expectedTile = targetSequence.currentTarget[tappedTiles.length];
 
-    if (tappedTile == expectedTile) {
+    // So sánh tile được nhấn với tile mong đợi
+    if (tappedTile.color == expectedTile.color) {
       tappedTiles.add(tappedTile);
-
-      // Kiểm tra nếu đã nhấn đúng toàn bộ danh sách
+      tappedTile.selectTile();
+      print('Tile tapped: ${tappedTile.isSelected}');
+      print('Expected: ${expectedTile.isSelected}');
+      // Kiểm tra hoàn thành mục tiêu
       if (tappedTiles.length == targetSequence.currentTarget.length) {
         player.increaseScore(100); // Cộng điểm
 
-        // Đổi mới các ô đã nhấn trong gameBoard
+        // Làm mới các ô đã nhấn và danh sách mục tiêu
         gameBoard.refreshSelectedTiles();
-
-        // Làm mới danh sách mục tiêu
         targetSequence.refreshSequence();
-
-        // Reset danh sách ô đã nhấn
+        for (var tile in tappedTiles) {
+          tile.resetTile();
+        }
         tappedTiles.clear();
       }
     } else {
-      // Nếu nhấn sai, làm mới mục tiêu và reset danh sách
-      targetSequence.refreshSequence();
+      // Nhấn sai, chỉ reset danh sách đã nhấn
+      print('wrong Tile tapped: ${tappedTile.isSelected}');
+      print('wrong Expected: ${expectedTile.isSelected}');
+      for (var tile in tappedTiles) {
+        tile.resetTile();
+      }
       tappedTiles.clear();
     }
   }
