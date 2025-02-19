@@ -155,7 +155,7 @@ class _GameScreenState extends State<GameScreen> {
                     decoration: BoxDecoration(
                       color: tile.color,
                       border: Border.all(
-                          color: tile.isSelected ? Colors.yellow : Colors.black,
+                          color: tile.isSelected ? Colors.white : Colors.black,
                           width: 2),
                       borderRadius: BorderRadius.circular(4),
                     ),

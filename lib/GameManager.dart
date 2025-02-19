@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+
 import 'Player.dart';
 import 'GameBoard.dart';
 import 'TargetSequence.dart';
@@ -18,6 +19,22 @@ class GameManager {
   void handleTileTap(ColorTile tappedTile) {
     // Kiểm tra nếu không có mục tiêu
     if (targetSequence.currentTarget.isEmpty) return;
+
+    Set<Color> availableColors = gameBoard.tiles
+        .expand((row) =>
+            row) // Chuyển từ List<List<ColorTile>> thành List<ColorTile>
+        .map((tile) => tile.color) // Lấy danh sách màu từ từng tile
+        .toSet(); // Chuyển thành Set để loại bỏ màu trùng nhau
+    bool isValidTarget = targetSequence.currentTarget
+        .every((tile) => availableColors.contains(tile.color));
+
+    // Nếu không có màu hợp lệ, reset target
+    if (!isValidTarget) {
+      print("Màu trong target không có trên board, reset target!");
+      targetSequence.refreshSequence();
+      tappedTiles.clear();
+      return;
+    }
 
     // Xác định tile mong đợi
     final expectedTile = targetSequence.currentTarget[tappedTiles.length];
