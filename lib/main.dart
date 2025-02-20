@@ -54,14 +54,14 @@ class _GameScreenState extends State<GameScreen> {
 
   void startTimer() {
     timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {
-        if (timeRemaining > 0) {
+      if (timeRemaining > 0) {
+        setState(() {
           timeRemaining--;
-        } else {
-          timer.cancel();
-          showGameOverDialog();
-        }
-      });
+        });
+      } else {
+        timer.cancel(); // Dừng Timer ngay lập tức
+        showGameOverDialog();
+      }
     });
   }
 
@@ -88,12 +88,13 @@ class _GameScreenState extends State<GameScreen> {
 
   void restartGame() {
     setState(() {
+      timer.cancel(); // Hủy timer hiện tại (nếu còn chạy)
       timeRemaining = 60;
       _gameManager.player.score = 0;
       _gameManager.gameBoard.refreshBoard();
-      _gameManager.targetSequence.refreshSequence();
+      _gameManager.targetSequence.refreshSequence(_gameManager.gameBoard);
       _gameManager.tappedTiles.clear();
-      startTimer();
+      startTimer(); // Bắt đầu lại Timer mới
     });
   }
 
@@ -119,20 +120,31 @@ class _GameScreenState extends State<GameScreen> {
           const SizedBox(height: 16),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
-            children: _gameManager.targetSequence.currentTarget
-                .map(
-                  (tile) => Container(
-                    margin: const EdgeInsets.all(4),
-                    width: 40,
-                    height: 40,
-                    decoration: BoxDecoration(
-                      color: tile.color,
-                      border: Border.all(color: Colors.black, width: 2),
-                      borderRadius: BorderRadius.circular(4),
-                    ),
+            children: [
+              ..._gameManager.targetSequence.currentTarget.map(
+                (tile) => Container(
+                  margin: const EdgeInsets.all(4),
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: tile.color,
+                    border: Border.all(color: Colors.black, width: 2),
+                    borderRadius: BorderRadius.circular(4),
                   ),
-                )
-                .toList(),
+                ),
+              ),
+
+              // Nút Reset Target
+              IconButton(
+                icon: const Icon(Icons.refresh, color: Colors.black),
+                onPressed: () {
+                  setState(() {
+                    _gameManager.targetSequence
+                        .refreshSequence(_gameManager.gameBoard);
+                  });
+                },
+              ),
+            ],
           ),
           const SizedBox(height: 24),
           Expanded(

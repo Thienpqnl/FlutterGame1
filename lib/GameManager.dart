@@ -20,6 +20,10 @@ class GameManager {
     // Kiểm tra nếu không có mục tiêu
     if (targetSequence.currentTarget.isEmpty) return;
 
+    // Kiểm tra nếu ô đã được chọn trước đó
+    if (tappedTiles.contains(tappedTile)) {
+      return; // Bỏ qua nếu ô này đã được nhấn trước đó
+    }
     Set<Color> availableColors = gameBoard.tiles
         .expand((row) =>
             row) // Chuyển từ List<List<ColorTile>> thành List<ColorTile>
@@ -31,7 +35,7 @@ class GameManager {
     // Nếu không có màu hợp lệ, reset target
     if (!isValidTarget) {
       print("Màu trong target không có trên board, reset target!");
-      targetSequence.refreshSequence();
+      targetSequence.refreshSequence(gameBoard);
       tappedTiles.clear();
       return;
     }
@@ -43,15 +47,13 @@ class GameManager {
     if (tappedTile.color == expectedTile.color) {
       tappedTiles.add(tappedTile);
       tappedTile.selectTile();
-      print('Tile tapped: ${tappedTile.isSelected}');
-      print('Expected: ${expectedTile.isSelected}');
       // Kiểm tra hoàn thành mục tiêu
       if (tappedTiles.length == targetSequence.currentTarget.length) {
         player.increaseScore(100); // Cộng điểm
 
         // Làm mới các ô đã nhấn và danh sách mục tiêu
         gameBoard.refreshSelectedTiles();
-        targetSequence.refreshSequence();
+        targetSequence.refreshSequence(gameBoard);
         for (var tile in tappedTiles) {
           tile.resetTile();
         }
@@ -59,8 +61,6 @@ class GameManager {
       }
     } else {
       // Nhấn sai, chỉ reset danh sách đã nhấn
-      print('wrong Tile tapped: ${tappedTile.isSelected}');
-      print('wrong Expected: ${expectedTile.isSelected}');
       for (var tile in tappedTiles) {
         tile.resetTile();
       }
